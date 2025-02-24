@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { text-align: center; background: #222; color: white; margin: 0; }
+        canvas { background: black; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+<h1>Snake Game</h1>
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const box = 20;
+    let snake = [{x: 200, y: 200}];
+    let food = {x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box};
+    let dx = 0, dy = 0;
+    let score = 0;
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "ArrowUp" && dy === 0) { dx = 0; dy = -box; }
+        else if (event.key === "ArrowDown" && dy === 0) { dx = 0; dy = box; }
+        else if (event.key === "ArrowLeft" && dx === 0) { dx = -box; dy = 0; }
+        else if (event.key === "ArrowRight" && dx === 0) { dx = box; dy = 0; }
+    });
+
+    function draw() {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "red";
+        ctx.fillRect(food.x, food.y, box, box);
+        ctx.fillStyle = "lime";
+        snake.forEach((segment, index) => {
+            ctx.fillRect(segment.x, segment.y, box, box);
+            if (index !== 0 && segment.x === snake[0].x && segment.y === snake[0].y) {
+                endGame();
+            }
+        });
+        let newHead = {x: snake[0].x + dx, y: snake[0].y + dy};
+        if (newHead.x < 0 || newHead.y < 0 || newHead.x >= canvas.width || newHead.y >= canvas.height) {
+            endGame();
+            return;
+        }
+        if (newHead.x === food.x && newHead.y === food.y) {
+            score++;
+            food = {x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box};
+        } else {
+            snake.pop();
+        }
+        snake.unshift(newHead);
+        setTimeout(draw, 100);
+    }
+
+    function endGame() {
+        alert("Game Over! Score: " + score);
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.sendData(JSON.stringify({ score: score }));
+        }
+        snake = [{x: 200, y: 200}];
+        dx = 0; dy = 0;
+        score = 0;
+    }
+
+    draw();
+</script>
+</body>
+</html>
